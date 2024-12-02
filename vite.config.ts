@@ -1,7 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-})
+  base: '/', // Configura esto si tu app estará en un subdirectorio, ej: '/my-app/'
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+});
