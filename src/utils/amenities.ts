@@ -7,6 +7,7 @@ const amenities = [
     {name:'Cámaras de seguridad'},
     {name:'Cierre perimetral'},
     {name:'Hidromasaje'},
+    {name:'Hogar a leña'},
     {name:'Jacuzzi'},
     {name:'Losa radiante'},
     {name:'Parrilla'},
