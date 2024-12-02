@@ -65,7 +65,7 @@ const Detail = () => {
 
     return (
         <div className="container d-flex flex-column justify-content-center align-items-center">
-            <div className='d-flex flex-column flex-xl-row w-100 mt-5 gap-1' style={{ minHeight: "500px" }}>
+            <div className='d-flex flex-column flex-xl-row w-100 mt-5 gap-1' style={{ height: "500px" }}>
                 <div className='w-100 w-lg-50 rounded h-sm-50 h-lg-100'>
                     <ImageGallery
                         items={slides}
