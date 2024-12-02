@@ -1,11 +1,9 @@
 import "./Home.css"
-import { Button, Col, Form, Row } from "react-bootstrap"
 import MainCarousel from "../../components/MainCarousel/MainCarousel"
 import "../../Global.css"
 import Search from "../../components/Search/Search"
 import LastCarousel from "../../components/LastCarousel/LastCarousel"
 import Contact from "../../components/Contact/Contat"
-import Footer from "../../components/Footer/Footer"
 
 const Home = () => {
 

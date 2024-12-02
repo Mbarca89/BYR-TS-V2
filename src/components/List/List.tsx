@@ -1,9 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChangeEvent, MouseEvent } from 'react'
 import { PropertyListType, PropertyType } from '../../types'
-import { notifyError, notifySuccess } from '../Toaster/Toaster'
 import { Table } from 'react-bootstrap'
 import { useRecoilState } from 'recoil'
 import { modalState } from '../../app/store'
@@ -17,8 +14,6 @@ interface ListProps {
 }
 
 const List:React.FC<ListProps> = ({enableEdit}) => {
-
-    const navigate = useNavigate()
 
     const [properties, setProperties] = useState<PropertyListType[]>([])
     const [selectedId, setSelectedId] = useState('')

@@ -13,7 +13,6 @@ const SERVER_URL = import.meta.env.VITE_REACT_APP_SERVER_URL;
 const LastCarousel = () => {
 
     const navigate = useNavigate()
-    const galleryRef = useRef<ImageGallery | null>(null);
     const [slides, setSlides] = useState<CarouselItemType[]>([])
     const [isLoaded, setIsloaded] = useState<boolean>(false)
 

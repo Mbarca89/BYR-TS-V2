@@ -1,4 +1,3 @@
-import style from './Footer.module.css'
 import { CiLocationOn } from 'react-icons/ci'
 
 const Footer = () => {

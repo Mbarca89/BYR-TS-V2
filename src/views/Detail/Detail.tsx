@@ -9,7 +9,6 @@ import { useRecoilState } from "recoil";
 import { modalState } from "../../app/store";
 import CustomModal from "../../components/CustomModal/CustomModal";
 import { Col, Row } from "react-bootstrap";
-import Footer from "../../components/Footer/Footer";
 
 const webUrl = import.meta.env.VITE_REACT_APP_URL
 const SERVER_URL = import.meta.env.VITE_REACT_APP_SERVER_URL
@@ -41,10 +40,7 @@ const Detail = () => {
         images: [],
         imageOrder: []
     })
-    const [imageIndex, setImageIndex] = useState<number>(0)
-    const [showGallery, setShowGallery] = useState<boolean>(false)
-    const [loading, setLoading] = useState<boolean>(true)
-    const [imageLoading, setImageLoading] = useState<boolean>(true)
+
     const [slides, setSlides] = useState<CarouselItemType[]>([])
     const [show, setShow] = useRecoilState(modalState)
 

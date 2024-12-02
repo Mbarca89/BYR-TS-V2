@@ -1,6 +1,6 @@
 import { useFormik } from "formik";
 import { useRef, useState } from "react";
-import { Col, Form, Row } from "react-bootstrap"
+import { Col, Form } from "react-bootstrap"
 import ReactLoading from "react-loading";
 import handleError from "../../utils/HandleErrors";
 import { notifySuccess } from "../../components/Toaster/Toaster";
@@ -52,7 +52,7 @@ const ContactView = () => {
             comments: '',
         },
         validate,
-        onSubmit: async values => {
+        onSubmit: async () => {
             setSending(true)
             try {
                 if (formRef.current) {
@@ -66,10 +66,6 @@ const ContactView = () => {
             }
         },
     });
-
-    const resetForm = () => {
-        formik.resetForm();
-    }
 
     return (
         <div className="d-flex flex-column justify-content-center align-items-center">

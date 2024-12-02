@@ -8,8 +8,8 @@ import ReactLoading from "react-loading";
 import { propertyTypes } from "../../utils/propertyTypes";
 import { propertyLocations } from "../../utils/propertylocations";
 import { operationTypes } from "../../utils/operationType";
-import Select, { SingleValue } from "react-select";
-import { Navigate, useNavigate } from "react-router-dom";
+import Select from "react-select";
+import { useNavigate } from "react-router-dom";
 const SERVER_URL = import.meta.env.VITE_REACT_APP_SERVER_URL;
 
 interface Filters {
@@ -19,8 +19,6 @@ interface Filters {
 }
 
 const Properties = () => {
-
-    const navigate = useNavigate()
 
     const operationType = operationTypes.map(type => ({ value: type, label: type }))
 

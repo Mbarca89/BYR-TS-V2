@@ -53,7 +53,7 @@ const Contact = () => {
             comments: '',
         },
         validate,
-        onSubmit: async values => {
+        onSubmit: async () => {
             setSending(true)
             try {
                 if (formRef.current) {
@@ -67,10 +67,6 @@ const Contact = () => {
             }
         },
     });
-
-    const resetForm = () => {
-        formik.resetForm();
-    }
 
     return (
         <div>

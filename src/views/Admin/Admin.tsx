@@ -2,10 +2,9 @@ import "./Admin.css"
 import { useState, useEffect } from 'react'
 import Uploader from "../../components/Uploader/Uploader"
 import List from "../../components/List/List"
-import { ChangeEvent, MouseEvent } from 'react'
+import { ChangeEvent } from 'react'
 import { notifyError } from '../../components/Toaster/Toaster'
 import { Container, Nav, Navbar } from 'react-bootstrap'
-import { useRecoilState } from 'recoil'
 import Editor from "../../components/Editor/Editor"
 const ADMIN_USER = import.meta.env.VITE_REACT_APP_ADMIN_USER
 const ADMIN_PASSWORD = import.meta.env.VITE_REACT_APP_ADMIN_PASSWORD

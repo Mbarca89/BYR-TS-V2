@@ -1,4 +1,3 @@
-import React from 'react';
 import "./Global.css"
 import { Route, Routes, Outlet } from 'react-router-dom';
 import Home from './views/Home/Home'

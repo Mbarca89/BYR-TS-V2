@@ -3,15 +3,14 @@ import { useState, useEffect } from 'react'
 import others from '../../utils/others'
 import services from '../../utils/services'
 import amenities from '../../utils/amenities'
-import { ChangeEvent, MouseEvent } from 'react'
+import { ChangeEvent } from 'react'
 import { Images, PropertyType } from '../../types'
 import { notifySuccess } from '../Toaster/Toaster'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import DOMPurify from 'dompurify';
-import ReactLoading from 'react-loading'
 import { propertyTypes } from '../../utils/propertyTypes'
-import { Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap'
+import { Button, Col, Form, Row, Spinner } from 'react-bootstrap'
 import { useFormik } from 'formik'
 import handleError from '../../utils/HandleErrors'
 const SERVER_URL = import.meta.env.VITE_REACT_APP_SERVER_URL
@@ -191,11 +190,6 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
         }
     }
 
-    const validate = (values: PropertyType): PropertyType => {
-        const errors: any = {};
-        return errors;
-    };
-
     const formik = useFormik({
         initialValues: {
             id: data.id,
@@ -218,7 +212,6 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
             amenities: data.amenities,
             imageOrder: data.imageOrder
         },
-        validate,
         enableReinitialize: true,
         onSubmit: async values => {
             setUploading(true)
