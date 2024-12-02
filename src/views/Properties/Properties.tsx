@@ -9,7 +9,6 @@ import { propertyTypes } from "../../utils/propertyTypes";
 import { propertyLocations } from "../../utils/propertylocations";
 import { operationTypes } from "../../utils/operationType";
 import Select from "react-select";
-import { useNavigate } from "react-router-dom";
 const SERVER_URL = import.meta.env.VITE_REACT_APP_SERVER_URL;
 
 interface Filters {

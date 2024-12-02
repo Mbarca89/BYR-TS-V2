@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { PropertyListType, PropertyType } from '../../types'
+import { PropertyListType } from '../../types'
 import { Table } from 'react-bootstrap'
 import { useRecoilState } from 'recoil'
 import { modalState } from '../../app/store'

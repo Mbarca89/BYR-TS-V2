@@ -1,10 +1,9 @@
 import "./LastCarousel.css"
 import axios from "axios"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import handleError from "../../utils/HandleErrors"
 import { useNavigate } from "react-router-dom"
 import { CarouselItemType } from "../../types"
-import ImageGallery from "react-image-gallery";
 import ReactLoading from "react-loading"
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
@@ -50,11 +49,11 @@ const LastCarousel = () => {
         getLastProperties()
     }, [])
 
-    const CustomRightArrow = ({ onClick, ...rest }: any) => {
+    const CustomRightArrow = ({ onClick }: any) => {
         return <button className="last-right-arrow" onClick={() => onClick()}>〉</button>;
     };
 
-    const CustomLeftArrow = ({ onClick, ...rest }: any) => {
+    const CustomLeftArrow = ({ onClick }: any) => {
         return <button className="last-left-arrow" onClick={() => onClick()}>〈</button>;
     };
 

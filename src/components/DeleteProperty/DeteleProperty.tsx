@@ -16,7 +16,7 @@ interface DeletePropertyProps {
 
 const DeleteProperty: React.FC<DeletePropertyProps> = ({ propertyId, propertyName, updateList }) => {
     const [loading, setloading] = useState<boolean>(false)
-    const [show, setShow] = useRecoilState(modalState)
+    const [, setShow] = useRecoilState(modalState)
 
     const handleDelete = async () => {
         setloading(true)

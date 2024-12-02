@@ -23,7 +23,7 @@ const AdminV2 = () => {
         user: '',
         password: ''
     })
-    const [loginError, setLoginError] = useState('')
+    const [, setLoginError] = useState('')
 
     const setTab = () => {
         setCurrentTab("home")

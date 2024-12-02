@@ -27,7 +27,7 @@ interface EditorProps {
 
 const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
     const [uploading, setUploading] = useState(false)
-    const [isLoaded, setIsloaded] = useState(false)
+    const [, setIsloaded] = useState(false)
     const [data, setData] = useState<PropertyType>({
         id: '',
         featured: false,
@@ -55,7 +55,6 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
     const [othersCheck, setOthersCheck] = useState(new Array(others.length).fill(false))
     const [servicesCheck, setServicesCheck] = useState(new Array(services.length).fill(false))
     const [amenitiesCheck, setAmenitiesCheck] = useState(new Array(amenities.length).fill(false))
-    const [inputKey, setInputKey] = useState<string>('asd')
 
     const othersHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
         let buffer = othersCheck
@@ -596,7 +595,7 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                         <h3>Agregar imágenes</h3>
                         <Row className='mb-5'>
                             <div className="">
-                                <input type="file" key={inputKey} name="uploader" accept="image/png, image/jpeg" multiple onChange={fileHandler} />
+                                <input type="file" name="uploader" accept="image/png, image/jpeg" multiple onChange={fileHandler} />
                             </div>
                         </Row>
                         <h3>Imágenes elegidas</h3>
