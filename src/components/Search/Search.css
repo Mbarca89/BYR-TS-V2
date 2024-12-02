@@ -1,0 +1,34 @@
+.custom-select {
+    border-radius: 0;
+    background-color: #4a4a4a;
+    color: white;
+    padding: 15px;
+}
+
+.custom-select :active {
+    background-color: #B84644;
+}
+
+.custom-select-option {
+    background-color: #d7d7d7 !important;
+    color: black !important;
+}
+
+.custom-select-option:hover {
+    background-color: #d7d7d7 !important;
+    color: #B84644 !important;
+}
+
+.custom-search-button {
+    background-color: #4a4a4a;
+    color: white;
+    padding: 20px !important;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-color: #B84644;
+}
+
+.custom-search-button:hover {
+    background-color: #B84644;
+    border-color: #B84644;
+}
