@@ -1,0 +1,44 @@
+.line {
+    position: relative;
+    align-self: center;
+    width: 90%;
+    height: 0;
+    border: 1px solid #7a2f2f;
+    animation: appear ease .2s;
+    animation-iteration-count: 1;
+}
+
+.buttonActive,
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border: none;
+    font: arial;
+    font-size: 100%;
+    font-weight: 600;
+    padding-left: .2%;
+    padding-right: .2%;
+    color: #4a4a4a;
+    transition: .1s ease-out;
+    text-decoration: none;
+    overflow: hidden;
+    white-space: nowrap;
+    border-left: solid;
+    border-left-color: #B84644;
+    border-left-width: 0;
+}
+
+.buttonActive {
+    background-color: #B84644;
+    color: white;
+}
+
+.button:hover {
+    cursor: pointer;
+    background-position: left;
+    border-left-width: .5em;
+    color: #B84644;
+}
