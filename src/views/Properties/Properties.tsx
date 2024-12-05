@@ -89,10 +89,12 @@ const Properties = () => {
             margin: "0",
             backgroundColor: "#4a4a4a",
             color: "white",
-            border: '1px solid #ced4da',
+            border: '1px solid #B84644',
+            cursor: "pointer",
             boxShadow: 'none',
             '&:hover': {
                 border: '1px solid #B84644',
+                backgroundColor: "#B84644",
             },
         }),
         singleValue: (provided: any) => ({
@@ -143,8 +145,10 @@ const Properties = () => {
     };
 
     return (
-        !loading ? <div className="h-100 w-100 d-flex flex-column justify-content-even">
-            <Button className="d-xl-none custom-properties-button rounded w-lg-100 w-sm-100 mt-3 variant-none" onClick={handleShow}>Filtrar</Button>
+        !loading ? <div className="w-100 d-flex flex-column justify-content-even">
+            <div className="container">
+                <Button className="d-xl-none custom-properties-button rounded w-lg-100 w-sm-100 mt-3 variant-none" onClick={handleShow}>Filtrar</Button>
+            </div>
             <Offcanvas show={show} onHide={handleClose} responsive="xl" placement="end">
                 <Offcanvas.Header closeButton />
                 <div className="w-100 h-25 px-3 z-3">

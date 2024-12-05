@@ -45,10 +45,12 @@ const Search = () => {
             margin: "0",
             backgroundColor: "#4a4a4a",
             color: "white",
-            border: '1px solid #ced4da',
+            border: '1px solid #B84644',
+            cursor:"pointer",
             boxShadow: 'none',
             '&:hover': {
                 border: '1px solid #B84644',
+                backgroundColor: "#B84644",
             },
         }),
         singleValue: (provided: any) => ({
