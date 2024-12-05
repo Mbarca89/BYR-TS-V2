@@ -145,7 +145,7 @@ const Properties = () => {
     };
 
     return (
-        !loading ? <div className="w-100 d-flex flex-column justify-content-even">
+        !loading ? <div className="w-100 d-flex flex-column justify-content-even" style={{minHeight:"100%"}}>
             <div className="container">
                 <Button className="d-xl-none custom-properties-button rounded w-lg-100 w-sm-100 mt-3 variant-none" onClick={handleShow}>Filtrar</Button>
             </div>
