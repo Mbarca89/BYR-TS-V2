@@ -1,5 +1,5 @@
 import "./Properties.css"
-import { useEffect, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import { PropertyDetailType } from "../../types"
 import axios from "axios"
 import handleError from "../../utils/HandleErrors";
@@ -10,6 +10,7 @@ import { propertyLocations } from "../../utils/propertylocations";
 import { operationTypes } from "../../utils/operationType";
 import Select from "react-select";
 import { useSearchParams } from "react-router-dom";
+import { MenuList } from "react-select/dist/declarations/src/components/Menu";
 const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
 interface Filters {
@@ -92,6 +93,7 @@ const Properties = () => {
             border: '1px solid #B84644',
             cursor: "pointer",
             boxShadow: 'none',
+            zIndex: 5,
             '&:hover': {
                 border: '1px solid #B84644',
                 backgroundColor: "#B84644",
@@ -108,11 +110,16 @@ const Properties = () => {
         dropdownIndicator: (provided: any) => ({
             ...provided,
             color: "white",
+        }),
+        menu: (provided: any) => ({
+            ...provided,
+            zIndex: 5555,
+            backgroundColor: "#d7d7d7",
         })
     };
 
-    const handleSubmit = () => {
-
+    const handleSubmit = (event:FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
     }
 
     const updateSearchParams = (newFilters: Filters) => {
@@ -159,7 +166,7 @@ const Properties = () => {
                     <Form noValidate onSubmit={handleSubmit}>
                         <Row className="gap-3 gap-md-0">
                             <Col xs={12} md={12} xl={3}>
-                                <Select className="z-2"
+                                <Select className=""
                                     options={operationType}
                                     value={filters.category}
                                     styles={customStyles}
@@ -168,7 +175,7 @@ const Properties = () => {
                                 />
                             </Col>
                             <Col xs={12} md={12} xl={3}>
-                                <Select className="z-2"
+                                <Select className=""
                                     options={propertyType}
                                     value={filters.type}
                                     styles={customStyles}
@@ -177,7 +184,7 @@ const Properties = () => {
                                 />
                             </Col>
                             <Col xs={12} md={12} xl={3}>
-                                <Select className="z-2"
+                                <Select className=""
                                     options={propertyLocation}
                                     value={filters.location}
                                     styles={customStyles}
