@@ -119,7 +119,7 @@ const Detail = () => {
                 <div dangerouslySetInnerHTML={{ __html: propertyData.description }}></div>
             </div>
             <hr className="w-100" style={{ width: "90%", color: "#B84644" }} />
-            <div className="w-100">
+            <div className="w-100 d-flex justify-content-center">
                 <Row className="w-100 mb-5">
                     <Col className="d-flex flex-column gap-1 mt-2" lg={4} xs={12}>
                         <p className="mb-0 mt-3"><b>Otros ambientes:</b></p>
