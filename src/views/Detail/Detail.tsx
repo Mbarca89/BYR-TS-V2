@@ -1,7 +1,7 @@
 import "./Detail.css"
 import axios from 'axios'
 import { useParams, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ImageGallery from "react-image-gallery";
 import { CarouselItemType, PropertyDetailType } from '../../types'
 import handleError from '../../utils/HandleErrors'
@@ -17,6 +17,7 @@ const Detail = () => {
 
     const { id } = useParams()
     const location = useLocation()
+    const galleryRef = useRef<ImageGallery | null>(null);
 
     const [propertyData, setPropertyData] = useState<PropertyDetailType>({
         id: '',
@@ -68,6 +69,7 @@ const Detail = () => {
             <div className='d-flex flex-column flex-xl-row w-100 mt-5 gap-1' style={{ height: "500px" }}>
                 <div className='w-100 w-lg-50 rounded h-sm-50 h-lg-100'>
                     <ImageGallery
+                        ref={galleryRef}
                         items={slides}
                         showThumbnails={false}
                         showFullscreenButton={false}
@@ -107,7 +109,7 @@ const Detail = () => {
                     </div>
                     <hr className="m-1" style={{ width: "90%", color: "#B84644" }} />
                     <div className="d-flex w-100 justify-content-between py-1 px-2">
-                        <h3 className="">{propertyData.currency} <b>{propertyData.price}</b></h3>
+                        <h3 className="">{propertyData.currency} <b>{propertyData.price || "Consultar"}</b></h3>
                         <a href={`https://api.whatsapp.com/send?phone=5492664570187&text=Hola,%20me%20interesa%20saber%20mas%20sobre%20esta%20propiedad:%20${webUrl}${location.pathname}`} target="_blank" rel="noopener noreferrer">
                             <img className="" src='/images/whatsapp.webp' alt="" />
                         </a>
@@ -153,6 +155,7 @@ const Detail = () => {
             {show && <CustomModal size="xl" backdrop="" fullscreen={true}>
                 <ImageGallery
                     items={slides}
+                    startIndex={galleryRef.current?.getCurrentIndex()}
                     showThumbnails={false}
                     showFullscreenButton={false}
                     showPlayButton={true}
