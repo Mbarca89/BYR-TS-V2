@@ -81,7 +81,7 @@ const LastCarousel = () => {
                                 <div className="d-flex flex-column align-items-center justify-content-center rounded p-1" style={{ width: "70%", height: "90%", backgroundColor: "rgba(0,0,0,.1)" }} key={index}>
                                     <div className="rounded h-50 w-100" style={{}}>
                                         <img
-                                            src={property.thumbnail}
+                                            src={property.thumbnail? property.thumbnail : "/images/noimage.webp"}
                                             alt=""
                                             className="h-100 w-100 rounded"
                                         />
