@@ -22,7 +22,7 @@ const MainCarousel = () => {
                 const res = await axios(`${SERVER_URL}/api/properties/featured`)
                 if (res.data)
                     await setSlides(res.data.map((item: any) => {
-                        return { original: item.images[item.imageOrder[0]].url, id: item.id, name: item.name, location: item.location, description: `${item.name} | ${item.location}` }
+                        return { original: item.images[0].url, id: item.id, name: item.name, location: item.location, description: `${item.name} | ${item.location}` }
                     }))
                 setIsloaded(true)
             } catch (error: any) {

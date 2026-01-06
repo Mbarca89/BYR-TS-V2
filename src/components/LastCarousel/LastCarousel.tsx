@@ -39,7 +39,7 @@ const LastCarousel = () => {
                 const res = await axios(`${SERVER_URL}/api/properties/last`)
                 if (res.data)
                     await setSlides(res.data.map((item: any) => {
-                        return { thumbnail: item.images[item.imageOrder[0]].thumbnailUrl, id: item.id, name: item.name, location: item.location, description: `${item.name} | ${item.location}` }
+                        return { thumbnail: item.images[0].thumbnailUrl, id: item.id, name: item.name, location: item.location, description: `${item.name} | ${item.location}` }
                     }))
                 setIsloaded(true)
             } catch (error: any) {

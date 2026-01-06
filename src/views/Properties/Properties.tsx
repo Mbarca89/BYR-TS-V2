@@ -151,6 +151,8 @@ const Properties = () => {
         setSearchParams(updatedParams);
     };
 
+    console.log(data)
+
     return (
         !loading ? <div className="w-100 d-flex flex-column justify-content-even" style={{minHeight:"100%"}}>
             <div className="container">
@@ -250,7 +252,7 @@ const Properties = () => {
                                     <div className="w-100" style={{ aspectRatio: "4 / 3", position: "relative" }}>
                                         <img
                                             className="rounded img-fluid object-fit-cover w-100 h-100"
-                                            src={property.images[property.imageOrder[0]].thumbnailUrl ? property.images[property.imageOrder[0]].thumbnailUrl : "/images/noimage.webp"}
+                                            src={property.images[0]?.thumbnailUrl ? property.images[0].thumbnailUrl : "/images/noimage.webp"}
                                             alt=""
                                         />
                                     </div>
