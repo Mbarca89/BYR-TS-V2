@@ -4,12 +4,12 @@ import { propertyTypes } from "../../utils/propertyTypes";
 import { propertyLocations } from "../../utils/propertylocations";
 import { operationTypes } from "../../utils/operationType";
 import Select from "react-select";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface Filters {
-    operationType: {value: string | undefined, label: string | undefined} | null,
-    propertyType: {value: string | undefined, label: string | undefined} | null,
+    category: {value: string | undefined, label: string | undefined} | null,
+    type: {value: string | undefined, label: string | undefined} | null,
     location: {value: string | undefined, label: string | undefined} | null
 }
 
@@ -18,8 +18,8 @@ const Search = () => {
     const navigate = useNavigate()
 
     const [filters, setFilters] = useState<Filters>({
-        operationType: null,
-        propertyType: null,
+        category: null,
+        type: null,
         location: null,
     })
 
@@ -45,10 +45,12 @@ const Search = () => {
             margin: "0",
             backgroundColor: "#4a4a4a",
             color: "white",
-            border: '1px solid #ced4da',
+            border: '1px solid #B84644',
+            cursor:"pointer",
             boxShadow: 'none',
             '&:hover': {
                 border: '1px solid #B84644',
+                backgroundColor: "#B84644",
             },
         }),
         singleValue: (provided: any) => ({
@@ -65,17 +67,17 @@ const Search = () => {
         })
     };
 
-    const handleTypeChange = (value:any) => {
+    const handleCategoryChange = (value:any) => {
         setFilters({
             ...filters,
-            operationType: value
+            category: value
         })
     }
 
-    const handlePropertyTypeChange = (value:any) => {
+    const handleTypeChange = (value:any) => {
         setFilters({
             ...filters,
-            propertyType: value
+            type: value
         })
     }
 
@@ -87,8 +89,9 @@ const Search = () => {
     }
 
 
-    const handleSubmit = () => {
-        navigate(`/propiedades?type=${filters.operationType?.value}&category=${filters.propertyType?.value || ""}&location=${filters.location?.value || ""}`)
+    const handleSubmit = (event:FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        navigate(`/propiedades?category=${filters.category?.value || ""}&type=${filters.type?.value || ""}&location=${filters.location?.value || ""}`)
     }
 
     return (
@@ -97,19 +100,19 @@ const Search = () => {
                 <Col xs={12} md={3}>
                     <Select
                         options={operationType}
-                        value={filters.operationType}
+                        value={filters.category}
                         styles={customStyles}
                         placeholder="Tipo de operación"
-                        onChange={(value)=>handleTypeChange(value)}
+                        onChange={(value)=>handleCategoryChange(value)}
                     />
                 </Col>
                 <Col xs={12} md={3}>
                     <Select
                         options={propertyType}
-                        value={filters.propertyType}
+                        value={filters.type}
                         styles={customStyles}
                         placeholder="Tipo de propiedad"
-                        onChange={(value)=>handlePropertyTypeChange(value)}
+                        onChange={(value)=>handleTypeChange(value)}
                     />
                 </Col><Col xs={12} md={3}>
                     <Select

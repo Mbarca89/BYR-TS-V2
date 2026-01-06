@@ -1,7 +1,7 @@
 import "./Detail.css"
 import axios from 'axios'
 import { useParams, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ImageGallery from "react-image-gallery";
 import { CarouselItemType, PropertyDetailType } from '../../types'
 import handleError from '../../utils/HandleErrors'
@@ -17,6 +17,7 @@ const Detail = () => {
 
     const { id } = useParams()
     const location = useLocation()
+    const galleryRef = useRef<ImageGallery | null>(null);
 
     const [propertyData, setPropertyData] = useState<PropertyDetailType>({
         id: '',
@@ -68,6 +69,7 @@ const Detail = () => {
             <div className='d-flex flex-column flex-xl-row w-100 mt-5 gap-1' style={{ height: "500px" }}>
                 <div className='w-100 w-lg-50 rounded h-sm-50 h-lg-100'>
                     <ImageGallery
+                        ref={galleryRef}
                         items={slides}
                         showThumbnails={false}
                         showFullscreenButton={false}
@@ -79,9 +81,9 @@ const Detail = () => {
                 </div>
                 <div className='w-100 w-lg-50 border border-2 rounded text-center d-flex flex-column align-items-center justify-content-between'>
                     <h2>{propertyData.name}</h2>
-                    <hr style={{ width: "90%", color: "#B84644" }} />
+                    <hr className="m-1" style={{ width: "90%", color: "#B84644" }} />
                     <h3 className="fs-4">{propertyData.category} - {propertyData.location}</h3>
-                    <hr style={{ width: "90%", color: "#B84644" }} />
+                    <hr className="m-1" style={{ width: "90%", color: "#B84644" }} />
                     <div className="w-100 d-flex flex-row gap-1 p-2 justify-content-between text-light">
                         <div className="w-25 p-2 rounded border border-2" style={{ backgroundColor: "#B84644" }}>
                             <h3 className="fs-4">{propertyData.size}</h3>
@@ -105,9 +107,9 @@ const Detail = () => {
                             <img src='/images/garage.webp' alt="" />
                         </div>
                     </div>
-                    <hr style={{ width: "90%", color: "#B84644" }} />
+                    <hr className="m-1" style={{ width: "90%", color: "#B84644" }} />
                     <div className="d-flex w-100 justify-content-between py-1 px-2">
-                        <h3 className="">{propertyData.currency} <b>{propertyData.price}</b></h3>
+                        <h3 className="">{propertyData.currency} <b>{propertyData.price || "Consultar"}</b></h3>
                         <a href={`https://api.whatsapp.com/send?phone=5492664570187&text=Hola,%20me%20interesa%20saber%20mas%20sobre%20esta%20propiedad:%20${webUrl}${location.pathname}`} target="_blank" rel="noopener noreferrer">
                             <img className="" src='/images/whatsapp.webp' alt="" />
                         </a>
@@ -119,7 +121,7 @@ const Detail = () => {
                 <div dangerouslySetInnerHTML={{ __html: propertyData.description }}></div>
             </div>
             <hr className="w-100" style={{ width: "90%", color: "#B84644" }} />
-            <div className="w-100">
+            <div className="w-100 d-flex justify-content-center">
                 <Row className="w-100 mb-5">
                     <Col className="d-flex flex-column gap-1 mt-2" lg={4} xs={12}>
                         <p className="mb-0 mt-3"><b>Otros ambientes:</b></p>
@@ -153,6 +155,7 @@ const Detail = () => {
             {show && <CustomModal size="xl" backdrop="" fullscreen={true}>
                 <ImageGallery
                     items={slides}
+                    startIndex={galleryRef.current?.getCurrentIndex()}
                     showThumbnails={false}
                     showFullscreenButton={false}
                     showPlayButton={true}

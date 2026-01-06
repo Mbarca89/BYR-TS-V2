@@ -1,5 +1,5 @@
 import "./Properties.css"
-import { useEffect, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
 import { PropertyDetailType } from "../../types"
 import axios from "axios"
 import handleError from "../../utils/HandleErrors";
@@ -9,11 +9,13 @@ import { propertyTypes } from "../../utils/propertyTypes";
 import { propertyLocations } from "../../utils/propertylocations";
 import { operationTypes } from "../../utils/operationType";
 import Select from "react-select";
+import { useSearchParams } from "react-router-dom";
+import { MenuList } from "react-select/dist/declarations/src/components/Menu";
 const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
 interface Filters {
-    operationType: { value: string | undefined, label: string | undefined } | null,
-    propertyType: { value: string | undefined, label: string | undefined } | null,
+    category: { value: string | undefined, label: string | undefined } | null,
+    type: { value: string | undefined, label: string | undefined } | null,
     location: { value: string | undefined, label: string | undefined } | null
 }
 
@@ -25,76 +27,48 @@ const Properties = () => {
 
     const propertyLocation = propertyLocations.map(type => ({ value: type, label: type }))
 
-    const queryFilters = new URLSearchParams(window.location.search)
-
+    const [searchParams, setSearchParams] = useSearchParams();
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true)
-
     const [show, setShow] = useState(false);
-
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-
-    const [data, setData] = useState<PropertyDetailType[]>([{
-        id: '',
-        name: '',
-        description: '',
-        type: '',
-        category: '',
-        price: 0,
-        currency: '',
-        location: '',
-        size: 0,
-        constructed: 0,
-        bedrooms: 0,
-        bathrooms: 0,
-        kitchen: 0,
-        garage: 0,
-        others: [],
-        services: [],
-        amenities: [],
-        featured: true,
-        images: [],
-        imageOrder: []
-    }])
-
+    const [data, setData] = useState<PropertyDetailType[]>([])
     const [filters, setFilters] = useState<Filters>({
-        operationType: null,
-        propertyType: null,
+        category: null,
+        type: null,
         location: null,
     })
 
     useEffect(() => {
         const getProperties = async () => {
-            setLoading(true)
+            setLoading(true);
             try {
-                const { data } = await axios(`${SERVER_URL}/api/properties/paginated?limit=6&offset=${currentPage - 1}&type=${filters.propertyType?.value || ""}&category=${filters.operationType?.value || ""}&location=${filters.location?.value || ""}`)
-                console.log(data)
-                setCurrentPage(data.page.number + 1)
-                setTotalPages(data.page.totalPages)
-                setData(data._embedded?.propertyResponseDtoList || [])
-                setLoading(false)
+                const { data } = await axios(
+                    `${SERVER_URL}/api/properties/paginated?limit=6&offset=${currentPage - 1}&category=${filters.category?.value || ""}&type=${filters.type?.value || ""}&location=${filters.location?.value || ""}`
+                );
+                setCurrentPage(data.page.number + 1);
+                setTotalPages(data.page.totalPages);
+                setData(data._embedded?.propertyResponseDtoList || []);
+                setLoading(false);
             } catch (error: any) {
-                handleError(error)
+                handleError(error);
             }
-        }
-        getProperties()
-    }, [currentPage, filters])
+        };
+        getProperties();
+    }, [currentPage, filters]);
 
     useEffect(() => {
-        if (queryFilters.size) {
-            const type: string = queryFilters.get('type') || ''
-            const category: string = queryFilters.get('category') || ''
-            const location: string = queryFilters.get('location') || ''
-            let filters: Filters = {
-                operationType: type ? { value: type, label: type } : null,
-                propertyType: category ? { value: category, label: category } : null,
-                location: location ? { value: location, label: location } : null
-            }
-            setFilters(filters)
-        }
-    }, [])
+        const category = searchParams.get('category') || '';
+        const type = searchParams.get('type') || '';
+        const location = searchParams.get('location') || '';
+        setFilters({
+            type: type ? { value: type, label: type } : null,
+            category: category ? { value: category, label: category } : null,
+            location: location ? { value: location, label: location } : null,
+        });
+    }, [searchParams]);
 
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -116,10 +90,13 @@ const Properties = () => {
             margin: "0",
             backgroundColor: "#4a4a4a",
             color: "white",
-            border: '1px solid #ced4da',
+            border: '1px solid #B84644',
+            cursor: "pointer",
             boxShadow: 'none',
+            zIndex: 5,
             '&:hover': {
                 border: '1px solid #B84644',
+                backgroundColor: "#B84644",
             },
         }),
         singleValue: (provided: any) => ({
@@ -133,47 +110,52 @@ const Properties = () => {
         dropdownIndicator: (provided: any) => ({
             ...provided,
             color: "white",
+        }),
+        menu: (provided: any) => ({
+            ...provided,
+            zIndex: 5555,
+            backgroundColor: "#d7d7d7",
         })
     };
 
-    const handleSubmit = () => {
-
+    const handleSubmit = (event:FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
     }
 
-    const handleTypeChange = (value: any) => {
-        setFilters({
-            ...filters,
-            operationType: value
-        })
-    }
+    const updateSearchParams = (newFilters: Filters) => {
+        const params: Record<string, string> = {};
+        if (newFilters.type?.value) params.type = newFilters.type.value;
+        if (newFilters.category?.value) params.category = newFilters.category.value;
+        if (newFilters.location?.value) params.location = newFilters.location.value;
+        setSearchParams(params);
+    };
 
-    const handlePropertyTypeChange = (value: any) => {
-        setFilters({
-            ...filters,
-            propertyType: value
-        })
-    }
-
-    const handlePropertyLocationChange = (value: any) => {
-        setFilters({
-            ...filters,
-            location: value
-        })
-    }
+    const handleFilterChange = (key: keyof Filters, value: Filters[keyof Filters]) => {
+        const updatedFilters = { ...filters, [key]: value };
+        setFilters(updatedFilters);
+        updateSearchParams(updatedFilters); // Actualiza las queries en la URL.
+    };
 
     const resetFilters = () => {
-        setFilters({
-            operationType: null,
-            propertyType: null,
-            location: null,
-        })
-    }
+        const reset = { category: null, type: null, location: null };
+        setFilters(reset);
+        setSearchParams({}); // Limpia las queries en la URL.
+    };
 
-    console.log(filters)
+    const handleFilterClick = (key: keyof Filters) => {
+        const newFilters = { ...filters, [key]: null };
+        setFilters(newFilters);
+
+        const updatedParams = new URLSearchParams(searchParams);
+        updatedParams.delete(key);
+        setSearchParams(updatedParams);
+    };
 
     return (
-        !loading ? <div className="h-100 w-100 d-flex flex-column justify-content-even">
-            <Button className="d-xl-none custom-properties-button rounded w-lg-100 w-sm-100 mt-3 variant-none" onClick={handleShow}>Filtrar</Button>
+        !loading ? <div className="w-100 d-flex flex-column justify-content-even" style={{minHeight:"100%"}}>
+            <div className="container">
+                <Button className="d-xl-none custom-properties-button rounded w-lg-100 w-sm-100 mt-3 variant-none" onClick={handleShow}>Filtrar</Button>
+            </div>
             <Offcanvas show={show} onHide={handleClose} responsive="xl" placement="end">
                 <Offcanvas.Header closeButton />
                 <div className="w-100 h-25 px-3 z-3">
@@ -184,43 +166,70 @@ const Properties = () => {
                     <Form noValidate onSubmit={handleSubmit}>
                         <Row className="gap-3 gap-md-0">
                             <Col xs={12} md={12} xl={3}>
-                                <Select className="z-2"
+                                <Select className=""
                                     options={operationType}
-                                    value={filters.operationType}
+                                    value={filters.category}
                                     styles={customStyles}
                                     placeholder="Tipo de operación"
-                                    onChange={(value) => handleTypeChange(value)}
+                                    onChange={(value) => handleFilterChange("category", value)}
                                 />
                             </Col>
                             <Col xs={12} md={12} xl={3}>
-                                <Select className="z-2"
+                                <Select className=""
                                     options={propertyType}
-                                    value={filters.propertyType}
+                                    value={filters.type}
                                     styles={customStyles}
                                     placeholder="Tipo de propiedad"
-                                    onChange={(value) => handlePropertyTypeChange(value)}
+                                    onChange={(value) => handleFilterChange("type", value)}
                                 />
                             </Col>
                             <Col xs={12} md={12} xl={3}>
-                                <Select className="z-2"
+                                <Select className=""
                                     options={propertyLocation}
                                     value={filters.location}
                                     styles={customStyles}
                                     placeholder="Ubicación"
-                                    onChange={(value) => handlePropertyLocationChange(value)}
+                                    onChange={(value) => handleFilterChange("location", value)}
                                 />
                             </Col>
                             <Col xs={12} md={12} xl={3} className="d-flex justify-content-end align-items-center gap-3">
-                                <Button onClick={resetFilters} className="custom-search-button rounded w-lg-50 w-sm-100">
+                                <Button onClick={resetFilters} className="custom-search-button rounded w-lg-50 w-sm-100 variant-none">
                                     Restablecer</Button>
                             </Col>
                         </Row>
                     </Form>
                     <div className="mt-2 d-flex flex-column flex-xl-row gap-2">
-                        <p className="m-0">filtros aplicados: </p>
-                        {filters.operationType?.value && <p role="button" onClick={() => setFilters({ ...filters, operationType: null })} className="px-2 rounded" style={{ backgroundColor: "rgba(0,0,0,.1)", }}>{filters.operationType.value} x</p>}
-                        {filters.propertyType?.value && <p role="button" onClick={() => setFilters({ ...filters, propertyType: null })} className="px-2 rounded" style={{ backgroundColor: "rgba(0,0,0,.1)", }}>{filters.propertyType.value} x</p>}
-                        {filters.location?.value && <p role="button" onClick={() => setFilters({ ...filters, location: null })} className="px-2 rounded" style={{ backgroundColor: "rgba(0,0,0,.1)", }}>{filters.location.value} x</p>}
+                        <p className="m-0">Filtros aplicados: </p>
+                        {filters.category?.value && (
+                            <p
+                                role="button"
+                                onClick={() => handleFilterClick("category")}
+                                className="px-2 rounded"
+                                style={{ backgroundColor: "rgba(0,0,0,.1)" }}
+                            >
+                                {filters.category.value} x
+                            </p>
+                        )}
+                        {filters.type?.value && (
+                            <p
+                                role="button"
+                                onClick={() => handleFilterClick("type")}
+                                className="px-2 rounded"
+                                style={{ backgroundColor: "rgba(0,0,0,.1)" }}
+                            >
+                                {filters.type.value} x
+                            </p>
+                        )}
+                        {filters.location?.value && (
+                            <p
+                                role="button"
+                                onClick={() => handleFilterClick("location")}
+                                className="px-2 rounded"
+                                style={{ backgroundColor: "rgba(0,0,0,.1)" }}
+                            >
+                                {filters.location.value} x
+                            </p>
+                        )}
                     </div>
                 </div>
             </Offcanvas>

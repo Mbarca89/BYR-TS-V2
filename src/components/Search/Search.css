@@ -6,7 +6,7 @@
 }
 
 .custom-select :active {
-    background-color: #B84644;
+    background-color: #B84644 !important;
 }
 
 .custom-select-option {
@@ -20,15 +20,15 @@
 }
 
 .custom-search-button {
-    background-color: #4a4a4a;
+    background-color: #4a4a4a !important;
     color: white;
     padding: 20px !important;
     padding-left: 20px;
     padding-right: 20px;
-    border-color: #B84644;
+    border-color: #B84644 !important;
 }
 
 .custom-search-button:hover {
-    background-color: #B84644;
-    border-color: #B84644;
+    background-color: #B84644 !important;
+    border-color: #B84644 !important;
 }
