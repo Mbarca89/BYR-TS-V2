@@ -250,7 +250,7 @@ const Properties = () => {
                                     <div className="w-100" style={{ aspectRatio: "4 / 3", position: "relative" }}>
                                         <img
                                             className="rounded img-fluid object-fit-cover w-100 h-100"
-                                            src={property.images[property.imageOrder[0]].thumbnailUrl}
+                                            src={property.images[property.imageOrder[0]].thumbnailUrl ? property.images[property.imageOrder[0]].thumbnailUrl : "/images/noimage.webp"}
                                             alt=""
                                         />
                                     </div>
