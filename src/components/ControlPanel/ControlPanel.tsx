@@ -1,6 +1,6 @@
 import style from './ControlPanel.module.css'
 import { useNavigate } from 'react-router-dom'
-const logo = require('../../img/logo.webp')
+const logo = '/images/logo.webp'
 
 const ControlPanel = () => {
 

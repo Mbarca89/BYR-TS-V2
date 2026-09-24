@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../../utils/api'
 import { useEffect, useState } from 'react'
 import { PropertyListType } from '../../types'
 import { Table } from 'react-bootstrap'
@@ -7,7 +7,7 @@ import { modalState } from '../../app/store'
 import CustomModal from '../CustomModal/CustomModal'
 import DeleteProperty from '../DeleteProperty/DeteleProperty'
 import handleError from '../../utils/HandleErrors'
-const SERVER_URL = process.env.REACT_APP_SERVER_URL
+const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 interface ListProps {
     enableEdit: (propertyId: string) => void

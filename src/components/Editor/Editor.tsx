@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../../utils/api'
 import { useState, useEffect } from 'react'
 import others from '../../utils/others'
 import services from '../../utils/services'
@@ -6,14 +6,14 @@ import amenities from '../../utils/amenities'
 import { ChangeEvent } from 'react'
 import { Images, PropertyType } from '../../types'
 import { notifySuccess } from '../Toaster/Toaster'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
-import DOMPurify from 'dompurify';
+import RichTextEditor from '../RichTextEditor/RichTextEditor'
+import { sanitizeRichText } from '../../utils/richText'
 import { propertyTypes } from '../../utils/propertyTypes'
 import { Button, Col, Form, Row, Spinner } from 'react-bootstrap'
 import { useFormik } from 'formik'
 import handleError from '../../utils/HandleErrors'
-const SERVER_URL = process.env.REACT_APP_SERVER_URL
+import { normalizeImageOrder, removeImageFromOrder } from '../../utils/images'
+const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 interface ImagePreview {
     file: File;
@@ -27,7 +27,8 @@ interface EditorProps {
 
 const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
     const [uploading, setUploading] = useState(false)
-    const [, setIsloaded] = useState(false)
+    const [isLoaded, setIsloaded] = useState(false)
+    const [loadError, setLoadError] = useState(false)
     const [data, setData] = useState<PropertyType>({
         id: '',
         featured: false,
@@ -52,142 +53,46 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
     const [images, setImages] = useState<File[]>([]);
     const [selectedImages, setSelectedImages] = useState<ImagePreview[]>()
     const [propertyImages, setPropertyImages] = useState<Images[]>([])
-    const [othersCheck, setOthersCheck] = useState(new Array(others.length).fill(false))
-    const [servicesCheck, setServicesCheck] = useState(new Array(services.length).fill(false))
-    const [amenitiesCheck, setAmenitiesCheck] = useState(new Array(amenities.length).fill(false))
-
-    const othersHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-        let buffer = othersCheck
-        buffer[index] = !buffer[index]
-        setOthersCheck(buffer)
-        if (event.target.checked === true) {
-            setData({
-                ...data,
-                others: [...data.others, event.target.value]
-            })
-        } else {
-            setData({
-                ...data,
-                others: [...data.others.filter((item) => item !== event.target.value)]
-            })
-        }
-    }
-
-    const servicesHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-        let buffer = servicesCheck
-        buffer[index] = !buffer[index]
-        setServicesCheck(buffer)
-        if (event.target.checked === true) {
-            setData({
-                ...data,
-                services: [...data.services, event.target.value]
-            })
-        } else {
-            setData({
-                ...data,
-                services: [...data.services.filter((item) => item !== event.target.value)]
-            })
-        }
-    }
-
-    const amenitiesHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-        let buffer = amenitiesCheck
-        buffer[index] = !buffer[index]
-        setAmenitiesCheck(buffer)
-        if (event.target.checked === true) {
-            setData({
-                ...data,
-                amenities: [...data.amenities, event.target.value]
-            })
-        } else {
-            setData({
-                ...data,
-                amenities: [...data.amenities.filter((item) => item !== event.target.value)]
-            })
-        }
-    }
 
     const fileHandler = (event: ChangeEvent<HTMLInputElement>) => {
-        const imagesUpload = event.target.files
-        if (imagesUpload) {
-            setImages([...images, ...imagesUpload])
-            const files = Array.from(imagesUpload);
-            const imagesPreview = files.map((file) => ({
-                file,
-                preview: URL.createObjectURL(file), // Generar una URL para la vista previa
-            }));
-            setSelectedImages((selectedImages || []).concat(imagesPreview));
-        }
-    }
-
+        const files = Array.from(event.target.files || []);
+        setImages(previous => [...previous, ...files]);
+        event.target.value = '';
+    };
     useEffect(() => {
-        // Limpia las URLs de vista previa cuando el componente se desmonta
-        return () => {
-            selectedImages && selectedImages.forEach((image) => URL.revokeObjectURL(image.preview));
-        };
-    }, [selectedImages]);
-
-    const deleteImageFromDb = async (index: number, id:string) => {
+        const previews = images.map(file => ({ file, preview: URL.createObjectURL(file) }));
+        setSelectedImages(previews);
+        return () => previews.forEach(image => URL.revokeObjectURL(image.preview));
+    }, [images]);
+    const deleteImage = (index: number) => setImages(previous => previous.filter((_, i) => i !== index));
+    const moveImage = (index: number, direction: number) => {
+        setImages(previous => {
+            const next = [...previous];
+            const target = index + direction;
+            if (target >= 0 && target < next.length) [next[index], next[target]] = [next[target], next[index]];
+            return next;
+        });
+    };
+    const moveRight = (index: number) => moveImage(index, 1);
+    const moveLeft = (index: number) => moveImage(index, -1);
+    const toggleOption = (field: 'others' | 'services' | 'amenities', value: string, checked: boolean) => {
+        const current = formik.values[field];
+        formik.setFieldValue(field, checked ? Array.from(new Set([...current, value])) : current.filter(item => item !== value));
+    };
+    const [deletingImage, setDeletingImage] = useState(false);
+    const deleteImageFromDb = async (index: number, id: string) => {
+        if (deletingImage) return;
+        setDeletingImage(true);
         try {
-            const res = await axios.delete(`${SERVER_URL}/api/images/delete?id=${id}`)
-            if(res.data) {
-                notifySuccess(res.data)
-            }
-            const newImages = [...propertyImages]
-            newImages.splice(index, 1)
-            setPropertyImages(newImages)
-            const newOrder = [...formik.values.imageOrder]
-            newOrder.splice(index,1)
-            formik.setFieldValue("imageOrder", newOrder)
-        } catch (error) {
-            handleError(error)
-        }
-    }
-
-    const deleteImage = (index: number) => {
-        const newImages = [...images]
-        newImages.splice(index, 1)
-        setImages(newImages)
-        const newImagesPreview: ImagePreview[] = selectedImages?.slice() || [];
-        newImagesPreview.splice(index, 1);
-        setSelectedImages(newImagesPreview);
-    }
-
-    const moveRight = (index: number) => {
-        const aux = images
-        if (aux) {
-            if (index !== aux.length - 1) {
-                const temp = aux[index]
-                aux[index] = aux[index + 1];
-                aux[index + 1] = temp;
-                setImages(aux)
-                const files = Array.from(aux);
-                const imagesPreview = files.map((file) => ({
-                    file,
-                    preview: URL.createObjectURL(file),
-                }));
-                setSelectedImages(imagesPreview);
-            }
-        }
-    }
-
-    const moveLeft = (index: number) => {
-        const aux = images
-        if (aux) {
-            if (index !== 0) {
-                const temp = aux[index]
-                aux[index] = aux[index - 1];
-                aux[index - 1] = temp;
-                setImages(aux)
-                const files = Array.from(aux);
-                const imagesPreview = files.map((file) => ({
-                    file,
-                    preview: URL.createObjectURL(file),
-                }));
-                setSelectedImages(imagesPreview);
-            }
-        }
-    }
+            await axios.delete(`${SERVER_URL}/api/images/delete`, { params: { id } });
+            const removed = propertyImages.findIndex(image => image.id === id);
+            if (removed < 0) return;
+            await formik.setFieldValue('imageOrder', removeImageFromOrder(formik.values.imageOrder, propertyImages.length, removed));
+            setPropertyImages(previous => previous.filter(image => image.id !== id));
+            notifySuccess('Imagen eliminada correctamente');
+        } catch (error) { handleError(error); }
+        finally { setDeletingImage(false); }
+    };
 
     const formik = useFormik({
         initialValues: {
@@ -213,46 +118,36 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
         },
         enableReinitialize: true,
         onSubmit: async values => {
-            setUploading(true)
+            if (uploading || deletingImage) return;
+            setUploading(true);
             try {
-                values.others = data.others
-                values.services = data.services
-                values.amenities = data.amenities
-                const formData = new FormData()
-                if (images) {
-                    let limit = values.imageOrder.length
-                    for (let i = 0; i < images.length; i++) {
-                        values.imageOrder.push(i + limit)
-                        formData.append('images', images[i])
-                    }
-                }
-                formData.append('propertyData', JSON.stringify(values))
-                setData({
-                    ...data,
-                    description: DOMPurify.sanitize(data.description)
-                })
-                const res = await axios.put(`${SERVER_URL}/api/properties/edit/${propertyId}`, formData)
-                if (res.data) {
-                    notifySuccess(res.data)
-                }
-                setUploading(false)
-                updateList()
-            } catch (error: any) {
-                handleError(error)
-                setUploading(false)
-            }
+                const payload = { ...values, name: values.name.trim(), description: sanitizeRichText(values.description),
+                    imageOrder: [...normalizeImageOrder(values.imageOrder, propertyImages.length), ...images.map((_, i) => propertyImages.length + i)] };
+                for (const field of ['price', 'size', 'constructed', 'bedrooms', 'bathrooms', 'kitchen', 'garage'] as const)
+                    payload[field] = Number(values[field] || 0);
+                const formData = new FormData();
+                images.forEach(image => formData.append('images', image));
+                formData.append('propertyData', JSON.stringify(payload));
+                await axios.put(`${SERVER_URL}/api/properties/edit/${propertyId}`, formData, { timeout: 120000 });
+                notifySuccess('Propiedad editada correctamente');
+                updateList();
+            } catch (error) { handleError(error); }
+            finally { setUploading(false); }
         },
     });
 
     useEffect(() => {
+        const controller = new AbortController();
+        setIsloaded(false);
+        setLoadError(false);
         const getProperty = async () => {
             try {
-                const { data } = await axios(`${SERVER_URL}/api/properties/getById?propertyId=${propertyId}`)
+                const { data } = await axios(`${SERVER_URL}/api/properties/getById?propertyId=${propertyId}`, { signal: controller.signal })
                 setData({
                     id: data.id,
                     featured: data.featured,
                     name: data.name,
-                    description: data.description,
+                    description: sanitizeRichText(data.description || ""),
                     type: data.type,
                     category: data.category,
                     price: data.price,
@@ -267,39 +162,24 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                     others: data.others,
                     services: data.services,
                     amenities: data.amenities,
-                    imageOrder: data.imageOrder
+                    imageOrder: normalizeImageOrder(data.imageOrder, (data.images || []).length)
                 })
                 setPropertyImages(data.images)
 
-                let othersCheckBuffer = othersCheck
-                others.map((item, index) => {
-                    if (data.others.toString().includes(item.name)) othersCheckBuffer[index] = true
-                    return null
-                })
-                setOthersCheck(othersCheckBuffer)
-                let servicesCheckBuffer = servicesCheck
-                services.map((item, index) => {
-                    if (data.services.toString().includes(item.name)) servicesCheckBuffer[index] = true
-                    return null
-                })
-                setServicesCheck(servicesCheckBuffer)
-
-                let amenitiesCheckBuffer = amenitiesCheck
-                amenities.map((item, index) => {
-                    if (data.amenities.toString().includes(item.name)) amenitiesCheckBuffer[index] = true
-                    return null
-                })
-                setAmenitiesCheck(amenitiesCheckBuffer)
                 setIsloaded(true)
             } catch (error: any) {
-                handleError(error)
+                if (!controller.signal.aborted) {
+                    setLoadError(true);
+                    handleError(error);
+                }
             }
         }
         if (propertyId) getProperty()
-    }, [])
+        return () => controller.abort();
+    }, [propertyId])
 
     const moveRightOrder = (index: number) => {
-        const aux = formik.values.imageOrder
+        const aux = [...formik.values.imageOrder]
         if (aux) {
             if (index !== aux.length - 1) {
                 const temp = aux[index]
@@ -311,7 +191,7 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
     }
 
     const moveLeftOrder = (index: number) => {
-        const aux = formik.values.imageOrder
+        const aux = [...formik.values.imageOrder]
         if (aux) {
             if (index !== 0) {
                 const temp = aux[index]
@@ -322,12 +202,15 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
         }
     }
 
+    if (!isLoaded) return <div className="p-4"><p>{loadError ? 'No se pudo cargar la propiedad.' : 'Cargando propiedad…'}</p><Button onClick={updateList}>Volver</Button></div>;
+
     return (
         <div className="d-flex flex-column justify-content-center align-items-center px-3">
             <header>
                 <h2>Editar propiedad</h2>
             </header>
             <Form noValidate onSubmit={formik.handleSubmit} className='w-100'>
+                <fieldset disabled={uploading || deletingImage}>
                 <h3>Información Básica</h3>
                 <Col lg={6}>
                     <Row className='mb-3'>
@@ -360,10 +243,7 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                     <Row className='mb-5'>
                         <Form.Label>Descripción</Form.Label>
                         <div className="">
-                            <ReactQuill style={{ height: '300px' }}
-                                theme='snow'
-                                className=""
-                                id='description'
+                            <RichTextEditor readOnly={uploading || deletingImage}
                                 value={formik.values.description}
                                 onChange={value => formik.setFieldValue('description', value)}
                             />
@@ -383,7 +263,7 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                                 onBlur={formik.handleBlur}
                             >
                                 {propertyTypes.map(type => (
-                                    <option value={type}>{type}</option>
+                                    <option key={type} value={type}>{type}</option>
                                 ))}
                             </Form.Select>
                         </Form.Group>
@@ -534,8 +414,8 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                                     type="checkbox"
                                     name={item.name}
                                     value={item.name}
-                                    onChange={(event) => othersHandler(event, index)}
-                                    checked={othersCheck[index]}
+                                    onChange={event => toggleOption('others', event.target.value, event.target.checked)}
+                                    checked={formik.values.others.includes(item.name)}
                                 />
                                 <label className='ms-1' htmlFor={item.name}>{item.name}</label>
                             </Col>
@@ -550,8 +430,8 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                                     type="checkbox"
                                     name={item.name}
                                     value={item.name}
-                                    onChange={(event) => servicesHandler(event, index)}
-                                    checked={servicesCheck[index]}
+                                    onChange={event => toggleOption('services', event.target.value, event.target.checked)}
+                                    checked={formik.values.services.includes(item.name)}
                                 />
                                 <label className='ms-1' htmlFor={item.name}>{item.name}</label>
                             </Col>
@@ -566,8 +446,8 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                                     type="checkbox"
                                     name={item.name}
                                     value={item.name}
-                                    onChange={(event) => amenitiesHandler(event, index)}
-                                    checked={amenitiesCheck[index]}
+                                    onChange={event => toggleOption('amenities', event.target.value, event.target.checked)}
+                                    checked={formik.values.amenities.includes(item.name)}
                                 />
                                 <label className='ms-1' htmlFor={item.name}>{item.name}</label>
                             </Col>
@@ -584,7 +464,7 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                                         <img src={propertyImages[image]?.thumbnailUrl} alt="Preview" className='w-50 h-50' />
                                         <div className='d-flex justify-content-center align-items-center'>
                                             <Button onClick={() => moveLeftOrder(index)}>{'<'}</Button>
-                                            <Button className="" onClick={() => deleteImageFromDb(index, propertyImages[image].id)}>X</Button>
+                                            <Button disabled={deletingImage || uploading} className="" onClick={() => deleteImageFromDb(index, propertyImages[image].id)}>X</Button>
                                             <Button onClick={() => moveRightOrder(index)}>{'>'}</Button>
                                         </div>
                                     </Col>
@@ -625,11 +505,12 @@ const Editor: React.FC<EditorProps> = ({ propertyId, updateList }) => {
                             :
                             <div className='d-flex flex-row justify-content-around mt-5 mb-5'>
                                 <Button variant='danger' onClick={updateList}>Cancelar</Button>
-                                <Button variant="primary" type='submit'>Guardar</Button>
+                                <Button variant="primary" type='submit' disabled={deletingImage}>Guardar</Button>
                             </div>
                         }
                     </Row>
                 </Col>
+            </fieldset>
             </Form>
         </div>
     )

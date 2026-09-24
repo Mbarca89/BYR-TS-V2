@@ -1,9 +1,9 @@
 import "./Global.css"
+import { Suspense, lazy, useLayoutEffect } from "react";
 import { Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import Home from './views/Home/Home'
 import Nav from './components/Nav/Nav'
 import Detail from './views/Detail/Detail';
-import Admin from './views/Admin/Admin';
 import Properties from './views/Properties/Properties';
 import ContactView from './views/ContactView/ContactView';
 import Footer from './components/Footer/Footer';
@@ -12,7 +12,8 @@ import { Toaster } from 'react-hot-toast';
 import TawkMessengerReact from '@tawk.to/tawk-messenger-react';
 import './App.css';
 import { Col } from 'react-bootstrap';
-import { useLayoutEffect } from "react";
+
+const Admin = lazy(() => import('./views/Admin/Admin'));
 
 const Wrapper = ({ children }: any) => {
   const location = useLocation();
@@ -53,7 +54,7 @@ function App() {
             <Route path='/detalle/:id' element={<Detail />} />
             <Route path='/empresa' element={<About />} />
           </Route>
-          <Route path='/admin' element={<Admin />} />
+          <Route path='/admin' element={<Suspense fallback={<p className="p-4">Cargando panel...</p>}><Admin /></Suspense>} />
         </Routes>
       </div>
     </Wrapper>

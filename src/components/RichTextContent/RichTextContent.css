@@ -1,0 +1,27 @@
+/* Shared presentation for stored Quill 1 HTML and semantic HTML exported by Quill 2. */
+.rich-text-content { overflow-wrap: anywhere; white-space: pre-wrap; }
+.rich-text-content p { margin: 0 0 .5em; }
+.rich-text-content .ql-size-small { font-size: .75em; }
+.rich-text-content .ql-size-large { font-size: 1.5em; }
+.rich-text-content .ql-size-huge { font-size: 2.5em; }
+.rich-text-content .ql-align-center { text-align: center; }
+.rich-text-content .ql-align-right { text-align: right; }
+.rich-text-content .ql-align-justify { text-align: justify; }
+.rich-text-content .ql-direction-rtl { direction: rtl; }
+.rich-text-content .ql-font-serif, .rich-text-content .ql-font-serif * { font-family: Georgia, 'Times New Roman', serif; }
+.rich-text-content .ql-font-monospace, .rich-text-content .ql-font-monospace * { font-family: Monaco, 'Courier New', monospace; }
+.rich-text-content ol, .rich-text-content ul { padding-left: 1.5em; white-space: normal; }
+.rich-text-content li { white-space: pre-wrap; }
+.rich-text-content ol { list-style-type: decimal; }
+.rich-text-content ul { list-style-type: disc; }
+.rich-text-content blockquote { border-left: 4px solid #ccc; margin: 1em 0; padding-left: 1em; }
+.rich-text-content pre { white-space: pre-wrap; background: #f1f1f1; padding: .75em; }
+.rich-text-content img { max-width: 100%; height: auto; }
+.rich-text-content .ql-indent-1 { margin-left: 3em; }
+.rich-text-content .ql-indent-2 { margin-left: 6em; }
+.rich-text-content .ql-indent-3 { margin-left: 9em; }
+.rich-text-content .ql-indent-4 { margin-left: 12em; }
+.rich-text-content .ql-indent-5 { margin-left: 15em; }
+.rich-text-content .ql-indent-6 { margin-left: 18em; }
+.rich-text-content .ql-indent-7 { margin-left: 21em; }
+.rich-text-content .ql-indent-8 { margin-left: 24em; }

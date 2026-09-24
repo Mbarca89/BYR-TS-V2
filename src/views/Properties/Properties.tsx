@@ -1,17 +1,16 @@
 import "./Properties.css"
-import { FormEvent, useEffect, useState } from "react"
+import { FormEvent, useEffect, useMemo, useState } from "react"
 import { PropertyDetailType } from "../../types"
-import axios from "axios"
+import axios from '../../utils/api'
 import handleError from "../../utils/HandleErrors";
 import { Button, Col, Form, Offcanvas, Pagination, Row } from "react-bootstrap";
-import ReactLoading from "react-loading";
+import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import { propertyTypes } from "../../utils/propertyTypes";
 import { propertyLocations } from "../../utils/propertylocations";
 import { operationTypes } from "../../utils/operationType";
 import Select from "react-select";
 import { useSearchParams } from "react-router-dom";
-import { MenuList } from "react-select/dist/declarations/src/components/Menu";
-const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 interface Filters {
     category: { value: string | undefined, label: string | undefined } | null,
@@ -28,47 +27,43 @@ const Properties = () => {
     const propertyLocation = propertyLocations.map(type => ({ value: type, label: type }))
 
     const [searchParams, setSearchParams] = useSearchParams();
-    const [currentPage, setCurrentPage] = useState(1);
+    const pageParam = Number(searchParams.get('page') || 1);
+    const currentPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+    const setCurrentPage = (page: number) => {
+        const next = new URLSearchParams(searchParams);
+        next.set('page', String(Math.max(1, page)));
+        setSearchParams(next);
+    };
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true)
     const [show, setShow] = useState(false);
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
     const [data, setData] = useState<PropertyDetailType[]>([])
-    const [filters, setFilters] = useState<Filters>({
-        category: null,
-        type: null,
-        location: null,
-    })
-
-    useEffect(() => {
-        const getProperties = async () => {
-            setLoading(true);
-            try {
-                const { data } = await axios(
-                    `${SERVER_URL}/api/properties/paginated?limit=6&offset=${currentPage - 1}&category=${filters.category?.value || ""}&type=${filters.type?.value || ""}&location=${filters.location?.value || ""}`
-                );
-                setCurrentPage(data.page.number + 1);
-                setTotalPages(data.page.totalPages);
-                setData(data._embedded?.propertyResponseDtoList || []);
-                setLoading(false);
-            } catch (error: any) {
-                handleError(error);
-            }
+    const [failed, setFailed] = useState(false);
+    const filters = useMemo<Filters>(() => {
+        const option = (key: string) => {
+            const value = searchParams.get(key);
+            return value ? { value, label: value } : null;
         };
-        getProperties();
-    }, [currentPage, filters]);
+        return { category: option('category'), type: option('type'), location: option('location') };
+    }, [searchParams]);
 
     useEffect(() => {
-        const category = searchParams.get('category') || '';
-        const type = searchParams.get('type') || '';
-        const location = searchParams.get('location') || '';
-        setFilters({
-            type: type ? { value: type, label: type } : null,
-            category: category ? { value: category, label: category } : null,
-            location: location ? { value: location, label: location } : null,
-        });
-    }, [searchParams]);
+        const controller = new AbortController();
+        setLoading(true); setFailed(false);
+        axios.get(`${SERVER_URL}/api/properties/paginated`, {
+            params: { limit: 6, offset: currentPage - 1, category: filters.category?.value || '',
+                type: filters.type?.value || '', location: filters.location?.value || '' },
+            signal: controller.signal
+        }).then(({ data }) => {
+            setTotalPages(data.page.totalPages);
+            setData(data._embedded?.propertyResponseDtoList || []);
+        }).catch(error => {
+            if (!controller.signal.aborted) { setFailed(true); setData([]); handleError(error); }
+        }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [currentPage, filters]);
 
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -132,26 +127,21 @@ const Properties = () => {
 
     const handleFilterChange = (key: keyof Filters, value: Filters[keyof Filters]) => {
         const updatedFilters = { ...filters, [key]: value };
-        setFilters(updatedFilters);
         updateSearchParams(updatedFilters); // Actualiza las queries en la URL.
     };
 
     const resetFilters = () => {
-        const reset = { category: null, type: null, location: null };
-        setFilters(reset);
         setSearchParams({}); // Limpia las queries en la URL.
     };
 
     const handleFilterClick = (key: keyof Filters) => {
-        const newFilters = { ...filters, [key]: null };
-        setFilters(newFilters);
 
         const updatedParams = new URLSearchParams(searchParams);
         updatedParams.delete(key);
+        updatedParams.delete('page');
         setSearchParams(updatedParams);
     };
 
-    console.log(data)
 
     return (
         !loading ? <div className="w-100 d-flex flex-column justify-content-even" style={{minHeight:"100%"}}>
@@ -237,6 +227,8 @@ const Properties = () => {
             </Offcanvas>
             <hr style={{ color: "#B84644" }} />
             <div className="d-flex flex-column align-items-center">
+                {failed && <p role="alert">No se pudieron cargar las propiedades. Intentá nuevamente.</p>}
+                {!failed && data.length === 0 && <p>No hay propiedades para estos filtros.</p>}
                 <Row className="container row-gap-3 w-100 d-flex align-items-center justify-content-center">
                     {data.map((property, index) => (
                         <Col
@@ -252,7 +244,7 @@ const Properties = () => {
                                     <div className="w-100" style={{ aspectRatio: "4 / 3", position: "relative" }}>
                                         <img
                                             className="rounded img-fluid object-fit-cover w-100 h-100"
-                                            src={property.images[0]?.thumbnailUrl ? property.images[0].thumbnailUrl : "/images/noimage.webp"}
+                                            src={property.images?.[0]?.thumbnailUrl || "/images/noImage.webp"}
                                             alt=""
                                         />
                                     </div>
@@ -267,13 +259,13 @@ const Properties = () => {
                                         <p className="text-truncate m-0">{property.name}</p>
                                         <p className="m-0">{property.location}</p>
                                         <div className="d-flex align-items-center justify-content-start gap-2">
-                                            Precio:{property.price == 0 ? <p className="m-0">Consultar</p> : <p className="m-0 text-truncate">{property.currency} {property.price}</p>}
+                                            Precio:{property.price === 0 ? <p className="m-0">Consultar</p> : <p className="m-0 text-truncate">{property.currency} {property.price}</p>}
                                             <div className="d-flex gap-1">
-                                                {(property.type === 'Casa' || property.type === 'Departamento' || property.type === 'Cabaña' || property.type === 'Duplex' || property.type === 'Monoambiente') && <img src="/images/bedroom.webp" />}
+                                                {(property.type === 'Casa' || property.type === 'Departamento' || property.type === 'Cabaña' || property.type === 'Duplex' || property.type === 'Monoambiente') && <img src="/images/bedroom.webp" alt="" />}
                                                 <p className="m-0">{property.bedrooms} Hab.</p>
                                             </div>
                                             <div className="d-flex gap-1">
-                                                {(property.type === 'Casa' || property.type === 'Departamento' || property.type === 'Cabaña' || property.type === 'Duplex' || property.type === 'Monoambiente') && <img src="/images/bathroom.webp" />}
+                                                {(property.type === 'Casa' || property.type === 'Departamento' || property.type === 'Cabaña' || property.type === 'Duplex' || property.type === 'Monoambiente') && <img src="/images/bathroom.webp" alt="" />}
                                                 <p className="m-0">{property.bathrooms} Bñ.</p>
                                             </div>
                                         </div>
@@ -319,14 +311,14 @@ const Properties = () => {
                         >
                             {currentPage + 2}
                         </Pagination.Item>}
-                        <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
+                        <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={totalPages === 0 || currentPage >= totalPages} />
                         <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
                     </Pagination>
                 </div>
             </div>
         </div> :
             <div className="d-flex justify-content-center align-items-center h-100">
-                <ReactLoading type='spinningBubbles' color='#4a4a4a' height={'5%'} width={'5%'} />
+                <LoadingSpinner />
             </div>
     )
 }

@@ -1,7 +1,7 @@
 import { useFormik } from "formik";
 import { useRef, useState } from "react";
 import { Col, Form } from "react-bootstrap"
-import ReactLoading from "react-loading";
+import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
 import handleError from "../../utils/HandleErrors";
 import { notifySuccess } from "../../components/Toaster/Toaster";
 import emailjs from '@emailjs/browser'
@@ -53,15 +53,17 @@ const ContactView = () => {
         },
         validate,
         onSubmit: async () => {
+            if (sending) return;
             setSending(true)
             try {
                 if (formRef.current) {
                     await emailjs.sendForm('service_2rg7tis', 'template_3omezxo', formRef.current, 'fup4O1b1tN2Rfnirg')
                     notifySuccess('Mensaje enviado correctamente.')
-                    setSending(false)
+                    formik.resetForm()
                 }
             } catch (error: any) {
                 handleError(error)
+            } finally {
                 setSending(false)
             }
         },
@@ -95,7 +97,7 @@ const ContactView = () => {
                         </Form.Group>
                         <Form.Group as={Col} xs={12} lg={{ span: 6, offset: 3 }}>
                             <Form.Label >Mail</Form.Label>
-                            <Form.Control type="mail" placeholder="Mail"
+                            <Form.Control type="email" placeholder="Mail"
                                 id="mail"
                                 name="mail"
                                 value={formik.values.mail}
@@ -133,7 +135,7 @@ const ContactView = () => {
                         <div className="d-flex justify-content-center mt-5">
                             {!sending && <button className="custom-contact-button rounded" type="submit">Enviar</button>}
                         </div>
-                        {sending && <ReactLoading type='spinningBubbles' color='#4a4a4a' height={'4%'} width={'4%'} />}
+                        {sending && <LoadingSpinner height="4%" width="4%" />}
                     </Form>
                 </div>
             </div>

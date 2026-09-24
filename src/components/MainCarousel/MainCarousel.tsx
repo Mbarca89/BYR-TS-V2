@@ -1,12 +1,12 @@
 import "./MainCarousel.css"
 import { useState, useRef, useEffect } from 'react'
-import axios from 'axios'
+import axios from '../../utils/api'
 import ImageGallery from "react-image-gallery";
 import { useNavigate } from 'react-router-dom';
-import ReactLoading from 'react-loading'
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner'
 import { CarouselItemType } from '../../types'
 import handleError from '../../utils/HandleErrors'
-const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 
 const MainCarousel = () => {
@@ -22,10 +22,11 @@ const MainCarousel = () => {
                 const res = await axios(`${SERVER_URL}/api/properties/featured`)
                 if (res.data)
                     await setSlides(res.data.map((item: any) => {
-                        return { original: item.images[0].url, id: item.id, name: item.name, location: item.location, description: `${item.name} | ${item.location}` }
+                        return { original: (item.images?.[0]?.url || "/images/noImage.webp"), id: item.id, name: item.name, location: item.location, description: `${item.name} | ${item.location}` }
                     }))
                 setIsloaded(true)
             } catch (error: any) {
+                setIsloaded(true)
                 handleError(error)
             }
         }
@@ -33,7 +34,7 @@ const MainCarousel = () => {
     }, [])
 
     const handleClick = () => {
-        if (!galleryRef.current) return
+        if (!galleryRef.current || !slides.length) return
         navigate(`/detalle/${slides[galleryRef.current.getCurrentIndex()].id}`)
     }
 
@@ -51,7 +52,7 @@ const MainCarousel = () => {
                     additionalClass="home-gallery"
                 />
             </div> :
-            <div className="d-flex justify-content-center"><ReactLoading type='spinningBubbles' color='#4a4a4a' height={'5%'} width={'5%'} /></div>
+            <div className="d-flex justify-content-center"><LoadingSpinner /></div>
     )
 }
 

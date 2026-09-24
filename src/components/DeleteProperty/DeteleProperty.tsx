@@ -5,8 +5,8 @@ import Button from 'react-bootstrap/Button';
 import handleError from "../../utils/HandleErrors";
 import { Spinner } from "react-bootstrap";
 import { useState } from "react";
-import axios from "axios";
-const SERVER_URL = process.env.REACT_APP_SERVER_URL
+import axios from '../../utils/api';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 interface DeletePropertyProps {
     propertyId: string
@@ -21,7 +21,7 @@ const DeleteProperty: React.FC<DeletePropertyProps> = ({ propertyId, propertyNam
     const handleDelete = async () => {
         setloading(true)
         try {
-            const res = await axios.delete(`${SERVER_URL}/api/properties/deleteProperty?propertyId=${propertyId}&propertyName=${propertyName}`)
+            const res = await axios.delete(`${SERVER_URL}/api/properties/deleteProperty`, { params: { propertyId } })
             if (res.data) {
                 notifySuccess(res.data)
                 updateList()

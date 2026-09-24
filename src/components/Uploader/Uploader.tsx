@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../../utils/api'
 import { useState, useEffect } from 'react'
 import others from '../../utils/others'
 import services from '../../utils/services'
@@ -6,14 +6,13 @@ import amenities from '../../utils/amenities'
 import { ChangeEvent } from 'react'
 import { PropertyType } from '../../types'
 import { notifySuccess } from '../Toaster/Toaster'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
-import DOMPurify from 'dompurify'
+import RichTextEditor from '../RichTextEditor/RichTextEditor'
+import { sanitizeRichText } from '../../utils/richText'
 import { propertyTypes } from '../../utils/propertyTypes'
 import { Button, Col, Form, Row, Spinner } from 'react-bootstrap'
 import { useFormik } from 'formik'
 import handleError from '../../utils/HandleErrors'
-const SERVER_URL = process.env.REACT_APP_SERVER_URL
+const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 interface ImagePreview {
     file: File;
@@ -26,185 +25,37 @@ interface UploaderProps {
 
 const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
     const [uploading, setUploading] = useState(false)
-    const [data, setData] = useState<PropertyType>({
-        id: '',
-        featured: false,
-        name: '',
-        description: '',
-        type: 'Cabaña',
-        category: 'Alquiler',
-        price: 0,
-        currency: '$',
-        location: 'San Luis',
-        size: 0,
-        constructed: 0,
-        bedrooms: 0,
-        bathrooms: 0,
-        kitchen: 0,
-        garage: 0,
-        others: [],
-        services: [],
-        amenities: [],
-        imageOrder:[]
-    })
     const [images, setImages] = useState<File[]>([]);
     const [selectedImages, setSelectedImages] = useState<ImagePreview[]>()
-    const [othersCheck, setOthersCheck] = useState(new Array(others.length).fill(false))
-    const [servicesCheck, setServicesCheck] = useState(new Array(services.length).fill(false))
-    const [amenitiesCheck, setAmenitiesCheck] = useState(new Array(amenities.length).fill(false))
-    const [inputKey, setInputKey] = useState<string>('asd')
-
-    const othersHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-        let buffer = othersCheck
-        buffer[index] = !buffer[index]
-        setOthersCheck(buffer)
-        if (event.target.checked === true) {
-            setData({
-                ...data,
-                others: [...data.others, event.target.value]
-            })
-        } else {
-            setData({
-                ...data,
-                others: [...data.others.filter((item) => item !== event.target.value)]
-            })
-        }
-    }
-
-    const servicesHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-        let buffer = servicesCheck
-        buffer[index] = !buffer[index]
-        setServicesCheck(buffer)
-        if (event.target.checked === true) {
-            setData({
-                ...data,
-                services: [...data.services, event.target.value]
-            })
-        } else {
-            setData({
-                ...data,
-                services: [...data.services.filter((item) => item !== event.target.value)]
-            })
-        }
-    }
-
-    const amenitiesHandler = (event: ChangeEvent<HTMLInputElement>, index: number) => {
-        let buffer = amenitiesCheck
-        buffer[index] = !buffer[index]
-        setAmenitiesCheck(buffer)
-        if (event.target.checked === true) {
-            setData({
-                ...data,
-                amenities: [...data.amenities, event.target.value]
-            })
-        } else {
-            setData({
-                ...data,
-                amenities: [...data.amenities.filter((item) => item !== event.target.value)]
-            })
-        }
-    }
 
     const fileHandler = (event: ChangeEvent<HTMLInputElement>) => {
-        const imagesUpload = event.target.files
-        if (imagesUpload) {
-            setImages([...images, ...imagesUpload])
-            const files = Array.from(imagesUpload);
-            const imagesPreview = files.map((file) => ({
-                file,
-                preview: URL.createObjectURL(file), // Generar una URL para la vista previa
-            }));
-            setSelectedImages((selectedImages || []).concat(imagesPreview));
-        }
-    }
-
+        const files = Array.from(event.target.files || []);
+        setImages(previous => [...previous, ...files]);
+        event.target.value = '';
+    };
     useEffect(() => {
-        // Limpia las URLs de vista previa cuando el componente se desmonta
-        return () => {
-            selectedImages && selectedImages.forEach((image) => URL.revokeObjectURL(image.preview));
-        };
-    }, [selectedImages]);
-
-    const deleteImage = (index: number) => {
-        const newImages = [...images]
-        newImages.splice(index, 1)
-        setImages(newImages)
-        const newImagesPreview: ImagePreview[] = selectedImages?.slice() || [];
-        newImagesPreview.splice(index, 1);
-        setSelectedImages(newImagesPreview);
-    }
-
-    const moveRight = (index: number) => {
-        const aux = images
-        if (aux) {
-            if (index !== aux.length - 1) {
-                const temp = aux[index]
-                aux[index] = aux[index + 1];
-                aux[index + 1] = temp;
-                setImages(aux)
-                const files = Array.from(aux);
-                const imagesPreview = files.map((file) => ({
-                    file,
-                    preview: URL.createObjectURL(file),
-                }));
-                setSelectedImages(imagesPreview);
-            }
-        }
-    }
-
-    const moveLeft = (index: number) => {
-        const aux = images
-        if (aux) {
-            if (index !== 0) {
-                const temp = aux[index]
-                aux[index] = aux[index - 1];
-                aux[index - 1] = temp;
-                setImages(aux)
-                const files = Array.from(aux);
-                const imagesPreview = files.map((file) => ({
-                    file,
-                    preview: URL.createObjectURL(file),
-                }));
-                setSelectedImages(imagesPreview);
-            }
-        }
-    }
-
-    const resetHandler = () => {
-        setData({
-            id: '',
-            featured: false,
-            name: '',
-            description: '',
-            type: 'Cabaña',
-            category: 'Alquiler',
-            price: 0,
-            currency: '$',
-            location: 'San Luis',
-            size: 0,
-            constructed: 0,
-            bedrooms: 0,
-            bathrooms: 0,
-            kitchen: 0,
-            garage: 0,
-            others: [],
-            services: [],
-            amenities: [],
-            imageOrder:[]
-        })
-        setOthersCheck(new Array(others.length).fill(false))
-        setServicesCheck(new Array(services.length).fill(false))
-        setAmenitiesCheck(new Array(amenities.length).fill(false))
-        setImages([])
-        setSelectedImages([])
-        setInputKey('123')
-        formik.resetForm();
-    }
-
-    const validate = (values: PropertyType): PropertyType => {
-        const errors: any = {};
-        if(!values.name.trim())
-            errors.name = "Ingrese el nombre de la propiedad"
+        const previews = images.map(file => ({ file, preview: URL.createObjectURL(file) }));
+        setSelectedImages(previews);
+        return () => previews.forEach(image => URL.revokeObjectURL(image.preview));
+    }, [images]);
+    const deleteImage = (index: number) => setImages(previous => previous.filter((_, i) => i !== index));
+    const moveImage = (index: number, direction: number) => {
+        setImages(previous => {
+            const next = [...previous];
+            const target = index + direction;
+            if (target >= 0 && target < next.length) [next[index], next[target]] = [next[target], next[index]];
+            return next;
+        });
+    };
+    const moveRight = (index: number) => moveImage(index, 1);
+    const moveLeft = (index: number) => moveImage(index, -1);
+    const toggleOption = (field: 'others' | 'services' | 'amenities', value: string, checked: boolean) => {
+        const current = formik.values[field];
+        formik.setFieldValue(field, checked ? Array.from(new Set([...current, value])) : current.filter(item => item !== value));
+    };
+    const validate = (values: PropertyType) => {
+        const errors: Partial<Record<keyof PropertyType, string>> = {};
+        if (!values.name.trim()) errors.name = 'Ingrese el nombre de la propiedad';
         return errors;
     };
 
@@ -225,50 +76,29 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
             bathrooms: undefined,
             kitchen: undefined,
             garage: undefined,
-            others: othersCheck,
-            services: servicesCheck,
-            amenities: amenitiesCheck,
-            imageOrder: new Array<number>
+            others: [],
+            services: [],
+            amenities: [],
+            imageOrder: [] as number[]
         },
         validate,
         enableReinitialize: true,
         onSubmit: async values => {
-            setUploading(true)
-            values.others=data.others
-            values.services=data.services
-            values.amenities=data.amenities
-            values.size =  values.size || 0
-            values.price = values.price || 0
-            values.constructed = values.constructed || 0
-            values.bedrooms = values.bedrooms || 0
-            values.bathrooms = values.bathrooms || 0
-            values.kitchen = values.kitchen || 0
-            values.garage = values.garage || 0
-            const formData = new FormData()
-            if (images) {
-                for (let i = 0; i < images.length; i++) {
-                    values.imageOrder.push(i)
-                    formData.append('images', images[i])
-                }
-            }
-
-            formData.append('propertyData', JSON.stringify(values))
-            setData({
-                ...data,
-                description: DOMPurify.sanitize(data.description)
-            })
+            if (uploading) return;
+            setUploading(true);
             try {
-                const res = await axios.post(`${SERVER_URL}/api/properties/publish`, formData)
-                if(res.data) {
-                    notifySuccess(res.data)
-                }
-                resetHandler()
-                setUploading(false)
-                updateList()
-            } catch (error: any) {
-                handleError(error)
-                setUploading(false)
-            }
+                const payload = { ...values, name: values.name.trim(), description: sanitizeRichText(values.description),
+                    imageOrder: images.map((_, i) => i) };
+                for (const field of ['price', 'size', 'constructed', 'bedrooms', 'bathrooms', 'kitchen', 'garage'] as const)
+                    payload[field] = Number(values[field] || 0);
+                const formData = new FormData();
+                images.forEach(image => formData.append('images', image));
+                formData.append('propertyData', JSON.stringify(payload));
+                await axios.post(`${SERVER_URL}/api/properties/publish`, formData, { timeout: 120000 });
+                notifySuccess('Propiedad publicada correctamente');
+                updateList();
+            } catch (error) { handleError(error); }
+            finally { setUploading(false); }
         },
     });
 
@@ -278,6 +108,7 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                 <h2>Publicar propiedad</h2>
             </header>
             <Form noValidate onSubmit={formik.handleSubmit} className='w-100'>
+                <fieldset disabled={uploading}>
                 <h3>Información Básica</h3>
                 <Col lg={6}>
                     <Row className='mb-3'>
@@ -312,10 +143,8 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                     <Row className='mb-5'>
                         <Form.Label>Descripción</Form.Label>
                         <div className="">
-                            <ReactQuill style={{ height: '300px' }}
-                                theme='snow'
-                                className=""
-                                id='description'
+                            <RichTextEditor readOnly={uploading}
+                                value={formik.values.description}
                                 onChange={value => formik.setFieldValue('description', value)}
                             />
                         </div>
@@ -334,7 +163,7 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                                 onBlur={formik.handleBlur}
                             >
                                 {propertyTypes.map(type => (
-                                    <option value={type}>{type}</option>
+                                    <option key={type} value={type}>{type}</option>
                                 ))}
                             </Form.Select>
                         </Form.Group>
@@ -485,8 +314,8 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                                     type="checkbox"
                                     name={item.name}
                                     value={item.name}
-                                    onChange={(event) => othersHandler(event, index)}
-                                    checked={othersCheck[index]}
+                                    onChange={event => toggleOption('others', event.target.value, event.target.checked)}
+                                    checked={formik.values.others.includes(item.name)}
                                 />
                                 <label className='ms-1' htmlFor={item.name}>{item.name}</label>
                             </Col>
@@ -501,8 +330,8 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                                     type="checkbox"
                                     name={item.name}
                                     value={item.name}
-                                    onChange={(event) => servicesHandler(event, index)}
-                                    checked={servicesCheck[index]}
+                                    onChange={event => toggleOption('services', event.target.value, event.target.checked)}
+                                    checked={formik.values.services.includes(item.name)}
                                 />
                                 <label className='ms-1' htmlFor={item.name}>{item.name}</label>
                             </Col>
@@ -517,8 +346,8 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                                     type="checkbox"
                                     name={item.name}
                                     value={item.name}
-                                    onChange={(event) => amenitiesHandler(event, index)}
-                                    checked={amenitiesCheck[index]}
+                                    onChange={event => toggleOption('amenities', event.target.value, event.target.checked)}
+                                    checked={formik.values.amenities.includes(item.name)}
                                 />
                                 <label className='ms-1' htmlFor={item.name}>{item.name}</label>
                             </Col>
@@ -529,7 +358,7 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                         <hr />
                         <Row className='mb-5'>
                             <div className="">
-                                <input type="file" key={inputKey} name="uploader" accept="image/png, image/jpeg, image/png" multiple onChange={fileHandler} />
+                                <input type="file" name="uploader" accept="image/png, image/jpeg, image/png" multiple onChange={fileHandler} />
                             </div>
                         </Row>
                         <h3>Imágenes elegidas</h3>
@@ -564,6 +393,7 @@ const Uploader: React.FC<UploaderProps> = ({ updateList }) => {
                         }
                     </Row>
                 </Col>
+            </fieldset>
             </Form>
         </div>
     )

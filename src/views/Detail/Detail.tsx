@@ -1,17 +1,19 @@
 import "./Detail.css"
-import axios from 'axios'
+import RichTextContent from "../../components/RichTextContent/RichTextContent";
+import { normalizeImageOrder } from "../../utils/images";
+import axios from '../../utils/api'
 import { useParams, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
-import ImageGallery from "react-image-gallery";
-import { CarouselItemType, PropertyDetailType } from '../../types'
+import ImageGallery, { ReactImageGalleryItem } from "react-image-gallery";
+import { PropertyDetailType } from '../../types'
 import handleError from '../../utils/HandleErrors'
 import { useRecoilState } from "recoil";
 import { modalState } from "../../app/store";
 import CustomModal from "../../components/CustomModal/CustomModal";
 import { Col, Row } from "react-bootstrap";
 
-const webUrl = process.env.REACT_APP_URL
-const SERVER_URL = process.env.REACT_APP_SERVER_URL
+const webUrl = import.meta.env.VITE_URL
+const SERVER_URL = import.meta.env.VITE_SERVER_URL
 
 const Detail = () => {
 
@@ -42,27 +44,33 @@ const Detail = () => {
         imageOrder: []
     })
 
-    const [slides, setSlides] = useState<CarouselItemType[]>([])
+    const [loading, setLoading] = useState(true);
+    const [failed, setFailed] = useState(false);
+    const [slides, setSlides] = useState<ReactImageGalleryItem[]>([])
     const [show, setShow] = useRecoilState(modalState)
 
     useEffect(() => {
-        const getProperty = async () => {
-            try {
-                const { data } = await axios(`${SERVER_URL}/api/properties/getById?propertyId=${id}`)
-                setPropertyData(data)
-                await setSlides(data.images.map((item: any) => {
-                    return { original: item.url, thumbnail: item.thumbnailUrl, originalHeight: "50%" }
-                }))
-            } catch (error) {
-                handleError(error)
-            }
-        }
-        if (id) getProperty()
-    }, [])
+        const controller = new AbortController();
+        setLoading(true); setFailed(false);
+        axios.get(`${SERVER_URL}/api/properties/getById`, { params: { propertyId: id }, signal: controller.signal })
+            .then(({ data }) => {
+                setPropertyData(data);
+                const images = data.images || [];
+                const ordered = normalizeImageOrder(data.imageOrder, images.length).map(index => images[index]);
+                setSlides((ordered.length ? ordered : [{ url: '/images/noImage.webp', thumbnailUrl: '/images/noImage.webp' }])
+                    .map((item: any) => ({ original: item.url, thumbnail: item.thumbnailUrl })));
+            }).catch(error => {
+                if (!controller.signal.aborted) { setFailed(true); handleError(error); }
+            }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [id]);
 
     const openModal = () => {
         setShow(true)
     }
+
+    if (loading) return <p className="p-4">Cargando propiedad…</p>;
+    if (failed) return <p className="p-4" role="alert">No se pudo cargar la propiedad. Puede que ya no esté disponible.</p>;
 
     return (
         <div className="container d-flex flex-column justify-content-center align-items-center">
@@ -118,7 +126,7 @@ const Detail = () => {
             </div>
             <hr className="w-100 mt-5" style={{ width: "90%", color: "#B84644" }} />
             <div className="">
-                <div dangerouslySetInnerHTML={{ __html: propertyData.description }}></div>
+                <RichTextContent html={propertyData.description} />
             </div>
             <hr className="w-100" style={{ width: "90%", color: "#B84644" }} />
             <div className="w-100 d-flex justify-content-center">
